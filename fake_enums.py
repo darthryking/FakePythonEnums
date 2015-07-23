@@ -17,10 +17,32 @@ __all__ = (
 
 
 class FakeEnum(object):
-    """ An abstract base class for the fake enum type. """
-    pass
+    """ Base class for the fake enum type. """
     
-    
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+        
+    def __repr__(self):
+        return "{}({}, {})".format(
+                self.__class__.__name__,
+                repr(self.name),
+                repr(self.value),
+            )
+            
+    def __str__(self):
+        return self.name
+        
+    def __int__(self):
+        return self.value
+        
+    def __eq__(self, other):
+        return self.name == other.name and self.value == other.value
+        
+    def __ne__(self, other):
+        return not self == other
+        
+        
 def fake_enum(arg, _initial=0):
     """ Takes a class and returns an evil version of that class, with 
     everything defined inside that class's 'value' tuple converted into actual
@@ -49,42 +71,7 @@ def fake_enum(arg, _initial=0):
         FakeEnumType = __metaclass__(
                 Decorated.__name__,
                 (FakeEnum,),
-                {
-                    '__doc__'   :   Decorated.__doc__,
-                    
-                    '__init__'  :
-                        lambda self, name, value: (
-                            setattr(self, 'name', name),
-                            setattr(self, 'value', value),
-                            None,
-                        )[-1],
-                        
-                    '__repr__'  :
-                        lambda self:
-                            '{}({}, {})'.format(
-                                    Decorated.__name__,
-                                    repr(self.name),
-                                    repr(self.value),
-                                ),
-                                
-                    '__str__'   :
-                        lambda self:
-                            self.name,
-                            
-                    '__int__'   :
-                        lambda self:
-                            self.value,
-                            
-                    '__eq__'    :
-                        lambda self, other:
-                            self.value == other.value and
-                            self.name == other.name,
-                            
-                    '__ne__'    :
-                        lambda self, other:
-                            not self == other,
-                            
-                },
+                {'__doc__' : Decorated.__doc__},
             )
             
         values = []
@@ -151,6 +138,20 @@ def _test():
     assert isinstance(Blag.BAZ, Blag)
     assert isinstance(Blag.SPAM, Blag)
     assert isinstance(Blag.EGGS, Blag)
+    
+    assert Blag.FOO == Blag('FOO', 100)
+    assert Blag.BAR == Blag('BAR', 101)
+    assert Blag.BIZ == Blag('BIZ', 102)
+    assert Blag.BAZ == Blag('BAZ', 103)
+    assert Blag.SPAM == Blag('SPAM', 42)
+    assert Blag.EGGS == Blag('EGGS', 9001)
+    
+    assert Blag.FOO != Blag('BAM', -1)
+    assert Blag.BAR != Blag('BAM', -1)
+    assert Blag.BIZ != Blag('BAM', -1)
+    assert Blag.BAZ != Blag('BAM', -1)
+    assert Blag.SPAM != Blag('BAM', -1)
+    assert Blag.EGGS != Blag('BAM', -1)
     
     for value in Blag:
         assert (
